@@ -205,6 +205,26 @@ class Executive {
 		this.alertCount++;
 	}
 
+	// Custom sorting function for courses to make EECS courses display last (gen eds/math/physics come first)
+	sort_courses(a, b) {
+		let a_department = a.course_code.split(" ")[0];
+		let b_department = b.course_code.split(" ")[0];
+		if (a_department == b_department) return a.course_code > b.course_code ? 1 : -1;
+		
+		// Professional electives
+		if (a_department == "Prof") return 1;
+		if (b_department == "Prof") return -1;
+		// Senior electives
+		if (a_department == "CS") return 1;
+		if (b_department == "CS") return -1;
+		// EECS courses
+		if (a_department == "EECS") return 1;
+		if (b_department == "EECS") return -1;
+
+		// Sort any other departments alphabetically before the above three
+		return a.course_code > b.course_code ? 1 : -1;
+	}
+
 	/**
 	* @post All aspects of the plan are updated: Course locations, arrows, credit hours per semester, errors/warnings, etc.
 	**/
@@ -221,8 +241,8 @@ class Executive {
 		if (this.plan.course_bank.length > 0) this.plan.status = 1; // 1 = incomplete
 
 		// Update course bank and transfer credits
-		this.plan.course_bank.sort((a, b) => (a.course_code > b.course_code ? 1 : -1));
-		this.plan.transfer_bank.sort((a, b) => (a.course_code > b.course_code ? 1 : -1));
+		this.plan.course_bank.sort(this.sort_courses);
+		this.plan.transfer_bank.sort(this.sort_courses);
 		this.renderBank("course-bank", this.plan.course_bank);
 		this.renderBank("transfer-bank", this.plan.transfer_bank);
 		document.getElementById("print-course-bank").innerText = this.plan.course_bank.map(course => course.course_code).join(", ") || "None";
